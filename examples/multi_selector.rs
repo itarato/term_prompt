@@ -1,9 +1,11 @@
-use term_prompt::selector::Selector;
+use std::collections::HashSet;
+
+use term_prompt::multi_selector::MultiSelector;
 
 fn main() {
     println!("Example:\n");
 
-    let selected = Selector::run(
+    let selections = MultiSelector::run(
         "Pick an animal:".to_string(),
         vec![
             "Rabbit".to_string(),
@@ -11,8 +13,8 @@ fn main() {
             "Seal".to_string(),
             "Tiger".to_string(),
         ],
-        Some(1),
+        HashSet::from([1]),
     );
 
-    println!("Selection: {:?}", selected);
+    println!("Multi selection: {:?}", selections);
 }
