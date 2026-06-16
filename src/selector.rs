@@ -1,11 +1,11 @@
 use std::{
-    io::{self, Cursor, Write},
+    io::{self, Write},
     time::Duration,
 };
 
 use crossterm::{
     ExecutableCommand,
-    cursor::{Hide, MoveUp, SetCursorStyle, Show},
+    cursor::{Hide, MoveUp, Show},
     event::{Event, KeyCode},
     style::{
         Color::{Black, Reset, Yellow},
