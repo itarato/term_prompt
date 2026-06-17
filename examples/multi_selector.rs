@@ -6,7 +6,7 @@ fn main() {
     println!("Example:\n");
 
     let selections = MultiSelector::run(
-        "Pick an animal:".to_string(),
+        "Pick a few animals:".to_string(),
         vec![
             "Rabbit".to_string(),
             "Fennec".to_string(),
