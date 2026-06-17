@@ -31,3 +31,9 @@ let selections = MultiSelector::run(
     HashSet::from([1]),
 );
 ```
+
+![Screenshot](./misc/date_selection.png)
+
+```rust
+let selection = DateSelector::run("Pick a date:".to_string(), None);
+```
