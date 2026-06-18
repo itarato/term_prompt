@@ -1,6 +1,6 @@
 [package]
 name = "term_prompt"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2024"
 description = "Rust terminal toolkit for prompts"
 license = "MIT"

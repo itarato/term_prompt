@@ -37,3 +37,16 @@ let selections = MultiSelector::run(
 ```rust
 let selection = DateSelector::run("Pick a date:".to_string(), None);
 ```
+
+![Screenshot](./misc/loading_bar.png)
+
+```rust
+let mut loading_bar = LoadingBar::new(99);
+
+for i in 0..100 {
+    thread::sleep(Duration::from_millis(200));
+    loading_bar.set(i);
+}
+
+loading_bar.complete();
+```
