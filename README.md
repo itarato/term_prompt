@@ -50,3 +50,48 @@ for i in 0..100 {
 
 loading_bar.complete();
 ```
+
+![Screenshot](./misc/tree.png)
+
+```rust
+struct NodeImpl {
+    title: String,
+    children: Vec<Self>,
+}
+
+impl TreeNodeItem for NodeImpl {
+    fn children(&self) -> Vec<Box<dyn TreeNodeItem>> {
+        // ...
+    }
+
+    fn to_tree_item_repr(&self) -> String {
+        format!("{}", self.title)
+    }
+}
+
+let nodes = NodeImpl::new(
+    "Animal".to_string(),
+    vec![
+        NodeImpl::new(
+            "Cat".to_string(),
+            vec![
+                NodeImpl::new("Russian blue".to_string(), vec![]),
+                NodeImpl::new("Siamese".to_string(), vec![]),
+                NodeImpl::new("Sphinx".to_string(), vec![]),
+            ],
+        ),
+        NodeImpl::new(
+            "Dog".to_string(),
+            vec![
+                NodeImpl::new("Leopard hound".to_string(), vec![]),
+                NodeImpl::new("Bulldog".to_string(), vec![]),
+                NodeImpl::new("German shepherd".to_string(), vec![]),
+                NodeImpl::new("Pitbull".to_string(), vec![]),
+            ],
+        ),
+        NodeImpl::new("Slug".to_string(), vec![]),
+    ],
+);
+
+TreeWalker::new(nodes).navigate().unwrap();
+```

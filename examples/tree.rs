@@ -30,6 +30,8 @@ impl TreeNodeItem for NodeImpl {
 }
 
 fn main() {
+    println!("\n");
+
     let nodes = NodeImpl::new(
         "Animal".to_string(),
         vec![
