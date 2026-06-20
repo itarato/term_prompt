@@ -3,6 +3,10 @@ use crossterm::{
     ExecutableCommand,
     cursor::{Hide, MoveUp, Show},
     event::{Event, KeyCode},
+    style::{
+        Color::{Black, Reset, White, Yellow},
+        SetBackgroundColor, SetForegroundColor,
+    },
 };
 use std::{io, time::Duration};
 
@@ -43,15 +47,29 @@ impl TreeNode {
 
     fn print(&self, indent: usize, selection: &[usize], self_index: usize) -> usize {
         let selected = !selection.is_empty() && selection[0] == self_index;
+        let last_selected = selected && selection.len() == 1;
         let mut lines_printed = 1;
 
-        print!(
-            "{}{:indent$}{}\r\n",
-            if selected { "> " } else { "" },
-            "",
-            self.elem.to_tree_item_repr(),
-            indent = indent
-        );
+        print!("{:indent$}", "", indent = indent);
+
+        if selected {
+            let bg_color = if last_selected { Yellow } else { White };
+            io::stdout()
+                .execute(SetBackgroundColor(bg_color))
+                .unwrap()
+                .execute(SetForegroundColor(Black))
+                .unwrap();
+        }
+
+        print!("{}", self.elem.to_tree_item_repr());
+
+        io::stdout()
+            .execute(SetBackgroundColor(Reset))
+            .unwrap()
+            .execute(SetForegroundColor(Reset))
+            .unwrap();
+
+        print!("\r\n");
 
         if !self.is_empty() {
             let selection = if selected { selection } else { &selection[..0] };
