@@ -133,7 +133,11 @@ impl TreeWalker {
                                 }
                             }
                             KeyCode::Down => {
-                                if Self::has_more_sibling(&self.root, &selection[1..]) {
+                                if Self::is_open(&self.root, &selection[1..])
+                                    && Self::has_more_child(&mut self.root, &selection[1..])
+                                {
+                                    selection.push(0);
+                                } else if Self::has_more_sibling(&self.root, &selection[1..]) {
                                     *selection.last_mut().unwrap() += 1;
                                 } else {
                                     // Find first parent with a next child.
@@ -160,6 +164,9 @@ impl TreeWalker {
                                     selection.push(0);
                                 }
                             }
+                            KeyCode::Char(' ') => {
+                                Self::toggle_open(&mut self.root, &selection[1..]);
+                            }
                             _ => {}
                         },
                         _ => {}
@@ -174,6 +181,18 @@ impl TreeWalker {
         crossterm::terminal::disable_raw_mode()?;
 
         Ok(())
+    }
+
+    fn is_open(node: &TreeNode, selection: &[usize]) -> bool {
+        if selection.is_empty() {
+            node.is_open
+        } else {
+            if selection[0] < node.children.len() {
+                Self::is_open(&node.children[selection[0]], &selection[1..])
+            } else {
+                false
+            }
+        }
     }
 
     fn has_more_child(node: &mut TreeNode, selection: &[usize]) -> bool {
@@ -200,6 +219,16 @@ impl TreeWalker {
                 Self::has_more_sibling(&node.children[selection[0]], &selection[1..])
             } else {
                 false
+            }
+        }
+    }
+
+    fn toggle_open(node: &mut TreeNode, selection: &[usize]) {
+        if selection.is_empty() {
+            node.is_open = !node.is_open;
+        } else {
+            if selection[0] < node.children.len() {
+                Self::toggle_open(&mut node.children[selection[0]], &selection[1..]);
             }
         }
     }
