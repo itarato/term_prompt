@@ -1,4 +1,4 @@
-use term_prompt::tree::{TreeNode, TreeNodeItem, TreeWalker};
+use term_prompt::tree::{TreeNodeItem, TreeWalker};
 
 #[derive(Clone)]
 struct NodeImpl {

@@ -10,15 +10,6 @@ use crossterm::{
 };
 use std::{io, time::Duration};
 
-enum Selection {
-    None,
-    Elem,
-    Child {
-        index: usize,
-        selection: Box<Selection>,
-    },
-}
-
 pub trait TreeNodeItem {
     fn children(&self) -> Vec<Box<dyn TreeNodeItem>>;
     fn to_tree_item_repr(&self) -> String;
@@ -50,7 +41,13 @@ impl TreeNode {
         let last_selected = selected && selection.len() == 1;
         let mut lines_printed = 1;
 
-        print!("{:indent$}", "", indent = indent);
+        let toggle_sign = if !self.children.is_empty() && !self.is_open {
+            "+"
+        } else {
+            "-"
+        };
+
+        print!("{:indent$}{} ", "", toggle_sign, indent = indent);
 
         if selected {
             let bg_color = if last_selected { Yellow } else { White };
@@ -71,7 +68,7 @@ impl TreeNode {
 
         print!("\r\n");
 
-        if !self.is_empty() {
+        if !self.is_empty() && self.is_open {
             let selection = if selected { selection } else { &selection[..0] };
 
             for (i, child) in self.children.iter().enumerate() {
@@ -130,11 +127,27 @@ impl TreeWalker {
                             KeyCode::Up => {
                                 if *selection.last().unwrap() > 0 {
                                     *selection.last_mut().unwrap() -= 1;
+                                } else if selection.len() > 1 {
+                                    // Go to parent.
+                                    selection.pop().unwrap();
                                 }
                             }
                             KeyCode::Down => {
                                 if Self::has_more_sibling(&self.root, &selection[1..]) {
                                     *selection.last_mut().unwrap() += 1;
+                                } else {
+                                    // Find first parent with a next child.
+                                    let mut sub_selection: &[usize] =
+                                        &selection[..selection.len() - 1];
+                                    while !sub_selection.is_empty() {
+                                        if Self::has_more_sibling(&self.root, sub_selection) {
+                                            selection = sub_selection.to_vec();
+                                            *selection.last_mut().unwrap() += 1;
+                                            break;
+                                        }
+
+                                        sub_selection = &sub_selection[..sub_selection.len() - 1];
+                                    }
                                 }
                             }
                             KeyCode::Left => {
@@ -143,7 +156,7 @@ impl TreeWalker {
                                 }
                             }
                             KeyCode::Right => {
-                                if Self::has_more_child(&self.root, &selection[1..]) {
+                                if Self::has_more_child(&mut self.root, &selection[1..]) {
                                     selection.push(0);
                                 }
                             }
@@ -163,12 +176,14 @@ impl TreeWalker {
         Ok(())
     }
 
-    fn has_more_child(node: &TreeNode, selection: &[usize]) -> bool {
+    fn has_more_child(node: &mut TreeNode, selection: &[usize]) -> bool {
         if selection.is_empty() {
+            node.is_open = true;
             !node.children.is_empty()
         } else {
             if selection[0] < node.children.len() {
-                Self::has_more_child(&node.children[selection[0]], &selection[1..])
+                node.is_open = true;
+                Self::has_more_child(&mut node.children[selection[0]], &selection[1..])
             } else {
                 false
             }
