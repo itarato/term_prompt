@@ -1,4 +1,4 @@
-use term_prompt::tree::{TreeNode, TreeNodeItem};
+use term_prompt::tree::{TreeNode, TreeNodeItem, TreeWalker};
 
 #[derive(Clone)]
 struct NodeImpl {
@@ -54,5 +54,5 @@ fn main() {
         ],
     );
 
-    TreeNode::new(Box::new(nodes)).navigate().unwrap();
+    TreeWalker::new(nodes).navigate().unwrap();
 }

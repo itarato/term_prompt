@@ -41,6 +41,48 @@ impl TreeNode {
         }
     }
 
+    fn print(&self, indent: usize, selection: &[usize], self_index: usize) -> usize {
+        let selected = !selection.is_empty() && selection[0] == self_index;
+        let mut lines_printed = 1;
+
+        print!(
+            "{}{:indent$}{}\r\n",
+            if selected { "> " } else { "" },
+            "",
+            self.elem.to_tree_item_repr(),
+            indent = indent
+        );
+
+        if !self.is_empty() {
+            let selection = if selected { selection } else { &selection[..0] };
+
+            for (i, child) in self.children.iter().enumerate() {
+                lines_printed += child.print(indent + 2, &selection[selection.len().min(1)..], i);
+            }
+        }
+
+        lines_printed
+    }
+
+    fn is_empty(&self) -> bool {
+        self.children.is_empty()
+    }
+}
+
+pub struct TreeWalker {
+    root: TreeNode,
+}
+
+impl TreeWalker {
+    pub fn new<T>(node: T) -> Self
+    where
+        T: TreeNodeItem + 'static,
+    {
+        Self {
+            root: TreeNode::new(Box::new(node)),
+        }
+    }
+
     pub fn navigate(&mut self) -> Result<(), Error> {
         let mut selection: Vec<usize> = vec![0];
 
@@ -56,7 +98,7 @@ impl TreeNode {
                     crossterm::terminal::ClearType::CurrentLine,
                 ))?;
             }
-            previous_lines_printed = self.print(0, &selection, 0);
+            previous_lines_printed = self.root.print(0, &selection, 0);
 
             loop {
                 if crossterm::event::poll(Duration::from_millis(100))? {
@@ -73,8 +115,7 @@ impl TreeNode {
                                 }
                             }
                             KeyCode::Down => {
-                                dbg!(&selection[1..]);
-                                if Self::has_more_sibling(self, &selection[1..]) {
+                                if Self::has_more_sibling(&self.root, &selection[1..]) {
                                     *selection.last_mut().unwrap() += 1;
                                 }
                             }
@@ -84,7 +125,7 @@ impl TreeNode {
                                 }
                             }
                             KeyCode::Right => {
-                                if Self::has_more_child(self, &selection[1..]) {
+                                if Self::has_more_child(&self.root, &selection[1..]) {
                                     selection.push(0);
                                 }
                             }
@@ -128,32 +169,5 @@ impl TreeNode {
                 false
             }
         }
-    }
-
-    fn print(&self, indent: usize, selection: &[usize], self_index: usize) -> usize {
-        let selected = !selection.is_empty() && selection[0] == self_index;
-        let mut lines_printed = 1;
-
-        print!(
-            "{}{:indent$}{}\r\n",
-            if selected { "> " } else { "" },
-            "",
-            self.elem.to_tree_item_repr(),
-            indent = indent
-        );
-
-        if !self.is_empty() {
-            let selection = if selected { selection } else { &selection[..0] };
-
-            for (i, child) in self.children.iter().enumerate() {
-                lines_printed += child.print(indent + 2, &selection[selection.len().min(1)..], i);
-            }
-        }
-
-        lines_printed
-    }
-
-    fn is_empty(&self) -> bool {
-        self.children.is_empty()
     }
 }
