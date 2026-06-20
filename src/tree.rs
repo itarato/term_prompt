@@ -1,4 +1,4 @@
-use crate::common::Error;
+use crate::common::{Error, LineTracker};
 use crossterm::{
     ExecutableCommand,
     cursor::{Hide, MoveUp, Show},
@@ -36,16 +36,21 @@ impl TreeNode {
         }
     }
 
-    fn print(&self, indent: usize, selection: &[usize], self_index: usize) -> usize {
+    fn print(&self, indent: usize, selection: &[usize], self_index: usize) -> LineTracker {
         let selected = !selection.is_empty() && selection[0] == self_index;
         let last_selected = selected && selection.len() == 1;
-        let mut lines_printed = 1;
+        let mut line_tracker = LineTracker::new();
 
         let toggle_sign = if !self.children.is_empty() && !self.is_open {
             "+"
         } else {
             "-"
         };
+
+        if last_selected {
+            line_tracker.mark_selection();
+        }
+        line_tracker.inc(1);
 
         print!("{:indent$}{} ", "", toggle_sign, indent = indent);
 
@@ -72,11 +77,11 @@ impl TreeNode {
             let selection = if selected { selection } else { &selection[..0] };
 
             for (i, child) in self.children.iter().enumerate() {
-                lines_printed += child.print(indent + 2, &selection[selection.len().min(1)..], i);
+                line_tracker += child.print(indent + 2, &selection[selection.len().min(1)..], i);
             }
         }
 
-        lines_printed
+        line_tracker
     }
 
     fn is_empty(&self) -> bool {
@@ -113,7 +118,7 @@ impl TreeWalker {
                     crossterm::terminal::ClearType::CurrentLine,
                 ))?;
             }
-            previous_lines_printed = self.root.print(0, &selection, 0);
+            previous_lines_printed = self.root.print(0, &selection, 0).total;
 
             loop {
                 if crossterm::event::poll(Duration::from_millis(100))? {
