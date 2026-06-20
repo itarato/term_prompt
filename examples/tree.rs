@@ -47,12 +47,12 @@ fn main() {
                     NodeImpl::new("Leopard hound".to_string(), vec![]),
                     NodeImpl::new("Bulldog".to_string(), vec![]),
                     NodeImpl::new("German shepherd".to_string(), vec![]),
+                    NodeImpl::new("Pitbull".to_string(), vec![]),
                 ],
             ),
             NodeImpl::new("Slug".to_string(), vec![]),
         ],
     );
 
-    let root = TreeNode::new(Box::new(nodes));
-    root.print(0);
+    TreeNode::new(Box::new(nodes)).navigate().unwrap();
 }
