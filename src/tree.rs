@@ -1,4 +1,4 @@
-use crate::common::{Error, LineTracker};
+use crate::common::{Error, SelectionTracker};
 use crossterm::{
     ExecutableCommand,
     cursor::{Hide, MoveUp, Show},
@@ -8,7 +8,10 @@ use crossterm::{
         SetBackgroundColor, SetForegroundColor,
     },
 };
-use std::{io, time::Duration};
+use std::{
+    io::{self, Write},
+    time::Duration,
+};
 
 pub trait TreeNodeItem {
     fn children(&self) -> Vec<Box<dyn TreeNodeItem>>;
@@ -36,10 +39,15 @@ impl TreeNode {
         }
     }
 
-    fn print(&self, indent: usize, selection: &[usize], self_index: usize) -> LineTracker {
+    fn print(
+        &self,
+        indent: usize,
+        selection: &[usize],
+        self_index: usize,
+    ) -> (Vec<String>, SelectionTracker) {
         let selected = !selection.is_empty() && selection[0] == self_index;
         let last_selected = selected && selection.len() == 1;
-        let mut line_tracker = LineTracker::new();
+        let mut line_tracker = SelectionTracker::new();
 
         let toggle_sign = if !self.children.is_empty() && !self.is_open {
             "+"
@@ -52,36 +60,39 @@ impl TreeNode {
         }
         line_tracker.inc(1);
 
-        print!("{:indent$}{} ", "", toggle_sign, indent = indent);
+        let mut line = format!("{:indent$}{} ", "", toggle_sign, indent = indent)
+            .as_bytes()
+            .to_vec();
 
         if selected {
             let bg_color = if last_selected { Yellow } else { White };
-            io::stdout()
-                .execute(SetBackgroundColor(bg_color))
+            line.execute(SetBackgroundColor(bg_color))
                 .unwrap()
                 .execute(SetForegroundColor(Black))
                 .unwrap();
         }
 
-        print!("{}", self.elem.to_tree_item_repr());
+        line.extend_from_slice(self.elem.to_tree_item_repr().as_bytes());
 
-        io::stdout()
-            .execute(SetBackgroundColor(Reset))
+        line.execute(SetBackgroundColor(Reset))
             .unwrap()
             .execute(SetForegroundColor(Reset))
             .unwrap();
 
-        print!("\r\n");
+        let mut out_lines = vec![String::from_utf8(line).unwrap()];
 
         if !self.is_empty() && self.is_open {
             let selection = if selected { selection } else { &selection[..0] };
 
             for (i, child) in self.children.iter().enumerate() {
-                line_tracker += child.print(indent + 2, &selection[selection.len().min(1)..], i);
+                let (mut subtree_lines, subtree_line_tracker) =
+                    child.print(indent + 2, &selection[selection.len().min(1)..], i);
+                out_lines.append(&mut subtree_lines);
+                line_tracker += subtree_line_tracker;
             }
         }
 
-        line_tracker
+        (out_lines, line_tracker)
     }
 
     fn is_empty(&self) -> bool {
@@ -118,7 +129,10 @@ impl TreeWalker {
                     crossterm::terminal::ClearType::CurrentLine,
                 ))?;
             }
-            previous_lines_printed = self.root.print(0, &selection, 0).total;
+            let (lines, line_tracker) = self.root.print(0, &selection, 0);
+            previous_lines_printed = line_tracker.total;
+            print!("{}\r\n", lines.join("\r\n"));
+            // io::stdout().flush().unwrap();
 
             loop {
                 if crossterm::event::poll(Duration::from_millis(100))? {
