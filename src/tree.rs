@@ -8,10 +8,7 @@ use crossterm::{
         SetBackgroundColor, SetForegroundColor,
     },
 };
-use std::{
-    io::{self, Write},
-    time::Duration,
-};
+use std::{io, time::Duration};
 
 pub trait TreeNodeItem {
     fn children(&self) -> Vec<Box<dyn TreeNodeItem>>;
@@ -162,7 +159,7 @@ impl TreeWalker {
                                     let mut sub_selection: &[usize] =
                                         &selection[..selection.len() - 1];
                                     while !sub_selection.is_empty() {
-                                        if Self::has_more_sibling(&self.root, sub_selection) {
+                                        if Self::has_more_sibling(&self.root, &sub_selection[1..]) {
                                             selection = sub_selection.to_vec();
                                             *selection.last_mut().unwrap() += 1;
                                             break;
