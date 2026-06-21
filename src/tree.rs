@@ -1,4 +1,4 @@
-use crate::common::{Error, SelectionTracker};
+use crate::common::{Error, SelectionTracker, screen_aware_print};
 use crossterm::{
     ExecutableCommand,
     cursor::{Hide, MoveUp, Show},
@@ -128,7 +128,7 @@ impl TreeWalker {
             }
             let (lines, line_tracker) = self.root.print(0, &selection, 0);
             previous_lines_printed = line_tracker.total;
-            print!("{}\r\n", lines.join("\r\n"));
+            screen_aware_print(lines, line_tracker.selection_line);
 
             loop {
                 if crossterm::event::poll(Duration::from_millis(100))? {
