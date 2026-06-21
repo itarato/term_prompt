@@ -132,7 +132,6 @@ impl TreeWalker {
             let (lines, line_tracker) = self.root.print(0, &selection, 0);
             previous_lines_printed = line_tracker.total;
             print!("{}\r\n", lines.join("\r\n"));
-            // io::stdout().flush().unwrap();
 
             loop {
                 if crossterm::event::poll(Duration::from_millis(100))? {
