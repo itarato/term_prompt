@@ -44,7 +44,7 @@ impl TreeNode {
     ) -> (Vec<String>, SelectionTracker) {
         let selected = !selection.is_empty() && selection[0] == self_index;
         let last_selected = selected && selection.len() == 1;
-        let mut line_tracker = SelectionTracker::new();
+        let mut selection_tracker = SelectionTracker::new();
 
         let toggle_sign = if !self.children.is_empty() && !self.is_open {
             "+"
@@ -53,9 +53,8 @@ impl TreeNode {
         };
 
         if last_selected {
-            line_tracker.mark_selection();
+            selection_tracker.mark_selection();
         }
-        line_tracker.inc(1);
 
         let mut line = format!("{:indent$}{} ", "", toggle_sign, indent = indent)
             .as_bytes()
@@ -85,11 +84,11 @@ impl TreeNode {
                 let (mut subtree_lines, subtree_line_tracker) =
                     child.print(indent + 2, &selection[selection.len().min(1)..], i);
                 out_lines.append(&mut subtree_lines);
-                line_tracker += subtree_line_tracker;
+                selection_tracker += subtree_line_tracker;
             }
         }
 
-        (out_lines, line_tracker)
+        (out_lines, selection_tracker)
     }
 
     fn is_empty(&self) -> bool {
@@ -127,8 +126,7 @@ impl TreeWalker {
                 ))?;
             }
             let (lines, line_tracker) = self.root.print(0, &selection, 0);
-            previous_lines_printed = line_tracker.total;
-            screen_aware_print(lines, line_tracker.selection_line);
+            previous_lines_printed = screen_aware_print(lines, line_tracker.index);
 
             loop {
                 if crossterm::event::poll(Duration::from_millis(100))? {

@@ -3,25 +3,15 @@ use std::ops::AddAssign;
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
 pub(crate) struct SelectionTracker {
-    pub total: usize,
-    pub selection_line: usize,
+    pub index: usize,
     found_selection: bool,
 }
 
 impl SelectionTracker {
     pub(crate) fn new() -> Self {
         Self {
-            total: 0,
-            selection_line: 0,
+            index: 1,
             found_selection: false,
-        }
-    }
-
-    pub(crate) fn inc(&mut self, n: usize) {
-        self.total += n;
-
-        if !self.found_selection {
-            self.selection_line += n;
         }
     }
 
@@ -32,33 +22,40 @@ impl SelectionTracker {
 
 impl AddAssign for SelectionTracker {
     fn add_assign(&mut self, rhs: Self) {
-        self.found_selection |= rhs.found_selection;
-        self.inc(rhs.total);
+        if self.found_selection {
+            return;
+        }
+
+        self.found_selection = rhs.found_selection;
+        self.index += rhs.index;
     }
 }
 
-pub(crate) fn screen_aware_print(lines: Vec<String>, focus_line: usize) {
+pub(crate) fn screen_aware_print(lines: Vec<String>, focus_line: usize) -> usize {
     let (_term_width, term_height) = crossterm::terminal::size().unwrap();
+    let height = term_height as usize;
+    let half_height = term_height as usize / 2 - 1;
 
-    if term_height as usize > lines.len() {
+    if height > lines.len() {
         print!("{}\r\n", lines.join("\r\n"));
+        lines.len()
     } else {
-        if term_height as usize / 2 > focus_line {
-            print!(
-                "{}\r\n\tvvv\tvvv\r\n",
-                lines[..term_height as usize].join("\r\n")
-            );
-        } else if term_height as usize / 2 > lines.len() - focus_line {
-            print!(
-                "\t^^^\t^^^\r\n{}\r\n",
-                lines[lines.len() - term_height as usize..].join("\r\n")
-            );
+        if half_height > focus_line {
+            let to = height - 2;
+            print!("{}\r\n\t...more\r\n", lines[..to].join("\r\n"));
+            to + 1
+        } else if half_height > lines.len() - focus_line {
+            let from = lines.len() - height + 2;
+            print!("\t...more\r\n{}\r\n", lines[from..].join("\r\n"));
+            lines.len() - from + 1
         } else {
+            let from = focus_line - half_height;
+            let to = focus_line + half_height;
             print!(
-                "\t^^^\t^^^\r\n{}\r\n\tvvv\tvvv\r\n",
-                lines[focus_line - term_height as usize / 2..focus_line + term_height as usize / 2]
-                    .join("\r\n")
+                "\t...more\r\n{}\r\n\t...more\r\n",
+                lines[from..to].join("\r\n")
             );
+            to - from + 2
         }
     }
 }

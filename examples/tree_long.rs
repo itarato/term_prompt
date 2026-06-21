@@ -32,10 +32,10 @@ impl TreeNodeItem for NodeImpl {
 fn main() {
     println!("\n");
 
-    let level2: Vec<NodeImpl> = (0..100)
+    let level2: Vec<NodeImpl> = (0..40)
         .map(|i| NodeImpl::new(format!("Level 2 Node: {}", i), vec![]))
         .collect();
-    let level1: Vec<NodeImpl> = (0..100)
+    let level1: Vec<NodeImpl> = (0..40)
         .map(|i| NodeImpl::new(format!("Level 1 Node: {}", i), level2.clone()))
         .collect();
     let root = NodeImpl::new("Level 0 Node".to_string(), level1);
