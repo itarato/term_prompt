@@ -50,7 +50,7 @@ pub(crate) fn screen_aware_print(lines: Vec<String>, focus_line: usize) -> usize
             lines.len() - from + 1
         } else {
             let from = focus_line - half_height;
-            let to = focus_line + half_height;
+            let to = (from + height - 3).min(lines.len());
             print!(
                 "\t...more\r\n{}\r\n\t...more\r\n",
                 lines[from..to].join("\r\n")
