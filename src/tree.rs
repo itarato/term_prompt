@@ -140,6 +140,12 @@ impl TreeWalker {
                             KeyCode::Up => {
                                 if *selection.last().unwrap() > 0 {
                                     *selection.last_mut().unwrap() -= 1;
+
+                                    while let Some(i) =
+                                        Self::has_last_child(&self.root, &selection[1..])
+                                    {
+                                        selection.push(i);
+                                    }
                                 } else if selection.len() > 1 {
                                     // Go to parent.
                                     selection.pop().unwrap();
@@ -233,6 +239,14 @@ impl TreeWalker {
             } else {
                 false
             }
+        }
+    }
+
+    fn has_last_child(node: &TreeNode, selection: &[usize]) -> Option<usize> {
+        if selection.is_empty() {
+            None
+        } else {
+            unimplemented!()
         }
     }
 

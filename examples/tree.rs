@@ -40,7 +40,13 @@ fn main() {
                 vec![
                     NodeImpl::new("Russian blue".to_string(), vec![]),
                     NodeImpl::new("Siamese".to_string(), vec![]),
-                    NodeImpl::new("Sphinx".to_string(), vec![]),
+                    NodeImpl::new(
+                        "Sphinx".to_string(),
+                        vec![
+                            NodeImpl::new("Tutenhamon".to_string(), vec![]),
+                            NodeImpl::new("Imenhotep".to_string(), vec![]),
+                        ],
+                    ),
                 ],
             ),
             NodeImpl::new(
