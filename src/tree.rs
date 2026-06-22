@@ -143,7 +143,7 @@ impl TreeWalker {
 
                                     // Last-est child - if available.
                                     while let Some(i) =
-                                        Self::has_last_child(&self.root, &selection[1..])
+                                        Self::last_child(&self.root, &selection[1..])
                                     {
                                         selection.push(i);
                                     }
@@ -208,34 +208,21 @@ impl TreeWalker {
     }
 
     fn has_more_child(node: &mut TreeNode, selection: &[usize]) -> bool {
-        if selection.is_empty() {
-            node.is_open = true;
-            !node.children.is_empty()
-        } else {
-            if selection[0] < node.children.len() {
-                node.is_open = true;
-                Self::has_more_child(&mut node.children[selection[0]], &selection[1..])
-            } else {
-                false
-            }
-        }
+        let current = Self::node_at_mut(node, selection);
+        current.is_open = true;
+        !current.children.is_empty()
     }
 
     fn has_more_sibling(node: &TreeNode, selection: &[usize]) -> bool {
         if selection.is_empty() {
-            false
-        } else if selection.len() == 1 {
-            node.children.len() - 1 > selection[0]
+            return false;
         } else {
-            if selection[0] < node.children.len() {
-                Self::has_more_sibling(&node.children[selection[0]], &selection[1..])
-            } else {
-                false
-            }
+            let parent = Self::node_at(node, &selection[..selection.len() - 1]);
+            parent.children.len() - 1 > *selection.last().unwrap()
         }
     }
 
-    fn has_last_child(node: &TreeNode, selection: &[usize]) -> Option<usize> {
+    fn last_child(node: &TreeNode, selection: &[usize]) -> Option<usize> {
         let current_node = Self::node_at(node, selection);
         if current_node.is_open && !current_node.children.is_empty() {
             Some(current_node.children.len() - 1)
@@ -249,6 +236,14 @@ impl TreeWalker {
             node
         } else {
             Self::node_at(&node.children[selection[0]], &selection[1..])
+        }
+    }
+
+    fn node_at_mut<'a, 'b>(node: &'a mut TreeNode, selection: &'b [usize]) -> &'a mut TreeNode {
+        if selection.is_empty() {
+            node
+        } else {
+            Self::node_at_mut(&mut node.children[selection[0]], &selection[1..])
         }
     }
 
