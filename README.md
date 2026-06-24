@@ -95,3 +95,14 @@ let nodes = NodeImpl::new(
 
 TreeWalker::new(nodes).navigate().unwrap();
 ```
+
+![Screenshot](./misc/counter.png)
+
+```rust
+let mut counter = Counter::new("Animals".to_string());
+for i in 0..42 {
+    counter.inc(i);
+}
+
+counter.complete();
+```
